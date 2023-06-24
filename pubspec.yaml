@@ -1,0 +1,24 @@
+name: flutter_assets_generate
+description: Flutter resource reference generation tool.
+version: 1.0.0
+# repository: https://github.com/my_org/my_repo
+
+environment:
+  sdk: '>=2.19.6 <3.0.0'
+
+# dependencies:
+#   path: ^1.8.0
+
+dev_dependencies:
+  lints: ^2.0.0
+  test: ^1.21.0
+
+dependencies:
+  build_config: ^1.1.1
+  code_builder: ^4.5.0
+  image: ^4.0.17
+  pubspec_parse: ^1.2.3
+  dart_style: ^2.1.1
+
+executables:
+  fag: flutter_assets_generator
