@@ -8,6 +8,7 @@ import 'package:code_builder/code_builder.dart';
 import 'package:dart_style/dart_style.dart';
 import 'package:pubspec_parse/pubspec_parse.dart';
 import 'package:yaml/yaml.dart';
+import 'package:path/path.dart' as path;
 
 class AssetsCommand extends Command<String> {
   @override
@@ -23,13 +24,15 @@ class AssetsCommand extends Command<String> {
     File file = File("$currentDir/pubspec.yaml");
     bool isFileExists = file.existsSync();
     if (!isFileExists) {
-      throw PathNotFoundException(file.path, OSError("Unable to find pubspec.yaml file!", 1));
+      throw PathNotFoundException(
+          file.path, OSError("Unable to find pubspec.yaml file!", 1));
     }
 
     Directory directory = Directory("$currentDir/lib");
     bool isLibDirExists = directory.existsSync();
     if (!isLibDirExists) {
-      throw PathNotFoundException(directory.path, OSError("Unable to find lib folder!", 2));
+      throw PathNotFoundException(
+          directory.path, OSError("Unable to find lib folder!", 2));
     }
 
     String pubspecYamlContent = file.readAsStringSync();
@@ -54,18 +57,27 @@ class AssetsCommand extends Command<String> {
               }
             }
           } else {
-            print("Unable to identify whether the path is a file or a directory！${path}");
+            print(
+                "Unable to identify whether the path is a file or a directory！${path}");
           }
         }
       }
     }
 
+    List<String> assetsKeyList = [];
     List<Field> fieldList = [];
     for (File file in fileList) {
       var docsList = List.empty(growable: true);
 
-      String shortPath=file.path.replaceAll("${currentDir}/", "");
+      String extension = path.extension(file.path);
+      String shortPath = file.path.replaceAll("${currentDir}/", "");
+      String assetsKey = shortPath.replaceAll(extension, "");
 
+      if (assetsKeyList.contains(assetsKey)) {
+        throw Exception("Duplicate ${shortPath}");
+      }
+
+      assetsKeyList.add(assetsKey);
       docsList.add("///${shortPath}");
 
       try {
@@ -76,21 +88,27 @@ class AssetsCommand extends Command<String> {
           docsList.add("///size:${decoder!.width}x${decoder.height}");
         }
       } catch (e) {
-        print("$e");
+        stderr.writeln(e.toString());
       }
 
       fieldList.add(Field((fieldBuild) => fieldBuild
         ..static = true
-        ..name = shortPath.replaceAll(RegExp(r'\s'), "_").replaceAll("/", "_").replaceAll(".", "_")
+        ..name = assetsKey
+            .replaceAll(RegExp(r'\s'), "_")
+            .replaceAll("/", "_")
+            .replaceAll(".", "_")
         ..type = refer("String")
         ..modifier = FieldModifier.constant
         ..assignment = Code("\"${shortPath}\"")
-        ..docs=ListBuilder(docsList)));
+        ..docs = ListBuilder(docsList)));
     }
 
     final assets = Class((classBuild) => classBuild //生成一个类
       ..name = "Assets" //这个类的名字叫User
-      ..docs=ListBuilder(["///Code generation, please do not manually modify","///Assets Reference Class"])
+      ..docs = ListBuilder([
+        "///Code generation, please do not manually modify",
+        "///Assets Reference Class"
+      ])
       ..fields.addAll(fieldList));
 
     final emitter = DartEmitter();
