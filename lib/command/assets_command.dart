@@ -24,15 +24,13 @@ class AssetsCommand extends Command<String> {
     File file = File("$currentDir/pubspec.yaml");
     bool isFileExists = file.existsSync();
     if (!isFileExists) {
-      throw PathNotFoundException(
-          file.path, OSError("Unable to find pubspec.yaml file!", 1));
+      throw PathNotFoundException(file.path, OSError("Unable to find pubspec.yaml file!", 1));
     }
 
     Directory directory = Directory("$currentDir/lib");
     bool isLibDirExists = directory.existsSync();
     if (!isLibDirExists) {
-      throw PathNotFoundException(
-          directory.path, OSError("Unable to find lib folder!", 2));
+      throw PathNotFoundException(directory.path, OSError("Unable to find lib folder!", 2));
     }
 
     String pubspecYamlContent = file.readAsStringSync();
@@ -42,7 +40,7 @@ class AssetsCommand extends Command<String> {
     if (pubspec.flutter != null) {
       YamlList fontsYamlList = pubspec.flutter!["assets"] ?? YamlList();
       for (String item in fontsYamlList) {
-        String path = "${currentDir}/${item}";
+        String path = "$currentDir/$item";
         bool isFile = FileSystemEntity.isFileSync(path);
         if (isFile) {
           fileList.add(File(path));
@@ -57,8 +55,7 @@ class AssetsCommand extends Command<String> {
               }
             }
           } else {
-            print(
-                "Unable to identify whether the path is a file or a directory！${path}");
+            print("Unable to identify whether the path is a file or a directory！$path");
           }
         }
       }
@@ -70,15 +67,15 @@ class AssetsCommand extends Command<String> {
       var docsList = List.empty(growable: true);
 
       String extension = path.extension(file.path);
-      String shortPath = file.path.replaceAll("${currentDir}/", "");
+      String shortPath = file.path.replaceAll("$currentDir/", "");
       String assetsKey = shortPath.replaceAll(extension, "");
 
       if (assetsKeyList.contains(assetsKey)) {
-        throw Exception("Duplicate ${shortPath}");
+        throw Exception("Duplicate $shortPath");
       }
 
       assetsKeyList.add(assetsKey);
-      docsList.add("///${shortPath}");
+      docsList.add("///$shortPath");
 
       try {
         var fileList = await file.readAsBytes();
@@ -88,35 +85,53 @@ class AssetsCommand extends Command<String> {
           docsList.add("///size:${decoder!.width}x${decoder.height}");
         }
       } catch (e) {
-        stderr.writeln(e.toString());
+        stderr.writeln("$e");
+        stderr.writeln("Failed to obtain image size! ${file.path}");
       }
 
       fieldList.add(Field((fieldBuild) => fieldBuild
         ..static = true
-        ..name = assetsKey
-            .replaceAll(RegExp(r'\s'), "_")
-            .replaceAll("/", "_")
-            .replaceAll(".", "_")
+        ..name = assetsKey.replaceAll(RegExp(r'\s'), "_").replaceAll("/", "_").replaceAll(".", "_")
         ..type = refer("String")
         ..modifier = FieldModifier.constant
-        ..assignment = Code("\"${shortPath}\"")
+        ..assignment = Code("\"$shortPath\"")
         ..docs = ListBuilder(docsList)));
     }
 
     final assets = Class((classBuild) => classBuild //生成一个类
       ..name = "Assets" //这个类的名字叫User
-      ..docs = ListBuilder([
-        "///Code generation, please do not manually modify",
-        "///Assets Reference Class"
-      ])
+      ..docs = ListBuilder(["///Code generation, please do not manually modify", "///Assets Reference Class"])
       ..fields.addAll(fieldList));
 
+    Method fineNameMethod = Method((methodBuilder) => methodBuilder
+      ..name = "fileName"
+      ..type = MethodType.getter
+      ..returns = refer("String")
+      ..body = Code('''
+              return path.basename(this);
+        '''));
+
+    final stringExtension = Extension((extensionBuilder) => extensionBuilder
+      ..name = "AssetsExtension"
+      ..on = refer("String")
+      ..docs = ListBuilder(["///Assets extension"])
+      ..methods = ListBuilder([fineNameMethod]));
+
+    Directive pathDirective = Directive.import("package:path/path.dart", as: "path");
+
     final emitter = DartEmitter();
+    String pathDirectiveStr = DartFormatter().format('${pathDirective.accept(emitter)}');
     String assetsClassStr = DartFormatter().format('${assets.accept(emitter)}');
+    String stringExtensionClassStr = DartFormatter().format('${stringExtension.accept(emitter)}');
 
     File assetsFile = File('$currentDir/lib/generated/assets.dart');
     assetsFile.parent.createSync(recursive: true);
-    assetsFile.writeAsStringSync(assetsClassStr);
+
+    assetsFile.writeAsStringSync(pathDirectiveStr);
+    assetsFile.writeAsStringSync("\n", mode: FileMode.append);
+    assetsFile.writeAsStringSync(assetsClassStr, mode: FileMode.append);
+    assetsFile.writeAsStringSync("\n", mode: FileMode.append);
+    assetsFile.writeAsStringSync(stringExtensionClassStr, mode: FileMode.append);
     return Future.value("");
   }
 }
