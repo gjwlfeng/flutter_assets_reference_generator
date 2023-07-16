@@ -7,8 +7,6 @@ import 'package:code_builder/code_builder.dart';
 import 'package:pubspec_parse/pubspec_parse.dart';
 
 class BuildConfigCommand extends Command<String> {
-
-
   @override
   String get description => "Generate the ProjectInfo class.";
 
@@ -40,7 +38,7 @@ class BuildConfigCommand extends Command<String> {
     final buildConfig = Class(
       (classBuild) => classBuild
         ..name = "ProjectInfo"
-        ..docs=ListBuilder(["///Code generation, please do not manually modify","///project info Reference Class"])
+        ..docs = ListBuilder(["///Code generation, please do not manually modify", "///project info Reference Class"])
         ..fields.add(
           Field(
             (fieldBuild) => fieldBuild
@@ -66,7 +64,7 @@ class BuildConfigCommand extends Command<String> {
     );
 
     final emitter = DartEmitter();
-    String buildConfigClassStr=DartFormatter().format('${buildConfig.accept(emitter)}');
+    String buildConfigClassStr = DartFormatter().format('${buildConfig.accept(emitter)}');
 
     File buildConfigFile = File('$currentDir/lib/generated/project_info.dart');
     buildConfigFile.parent.createSync(recursive: true);
