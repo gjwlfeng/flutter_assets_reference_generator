@@ -1,10 +1,11 @@
 import 'dart:async';
-import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
+import 'package:code_builder/code_builder.dart' as CodeBuilder;
 import 'package:code_builder/code_builder.dart';
 import 'package:dart_style/dart_style.dart';
-import 'package:flutter_assets_generate/%20extension.dart';
+import 'package:flutter_assets_generate/extension.dart';
+
 import 'package:path/path.dart';
 import 'package:args/command_runner.dart';
 
@@ -50,13 +51,13 @@ class JsonToModelCommand extends Command<String> {
 
     dynamic json = jsonDecode(jsonStr);
 
-    LinkedHashMap<String, Class> clzMap = LinkedHashMap();
+    List<CodeBuilder.Class> clzList = [];
 
     if (json is Map) {
-      generateClassFromMap(clzMap, json as Map<String, dynamic>, fileName.capitalize());
+      generateClassFromMap(clzList, json as Map<String, dynamic>, fileName.capitalize());
     } else if (json is List) {
       List<String> genericityList = [];
-      getGenerateClassFromList(clzMap, genericityList, json, fileName.capitalize());
+      getGenerateClassFromList(clzList, genericityList, json, fileName.capitalize());
     } else {
       print("Unprocessable type(${json.runtimeType})");
       return null;
@@ -66,19 +67,22 @@ class JsonToModelCommand extends Command<String> {
 
     final emitter = DartEmitter();
 
-    dartFile.writeAsStringSync("", mode: FileMode.write);
+    CodeBuilder.Directive partDirective = CodeBuilder.Directive.part("$fileName.g.dart");
+    String partDirectiveStr = DartFormatter().format('${partDirective.accept(emitter)}');
 
-    clzMap.forEach((key, value) {
+    dartFile.writeAsStringSync(partDirectiveStr, mode: FileMode.write);
+    dartFile.writeAsStringSync("\n", mode: FileMode.append);
+
+    for (var value in clzList.reversed) {
       String classStr = DartFormatter().format('${value.accept(emitter)}');
       dartFile.writeAsStringSync(classStr, mode: FileMode.append);
       dartFile.writeAsStringSync("\n", mode: FileMode.append);
-    });
-
+    }
     return null;
   }
 
-  String generateClassFromMap(LinkedHashMap<String, Class> clzMap, Map<String, dynamic> jsonMap, String className) {
-    List<Field> fieldList = [];
+  String generateClassFromMap(List<CodeBuilder.Class> clzList, Map<String, dynamic> jsonMap, String className) {
+    List<CodeBuilder.Field> fieldList = [];
 
     if (isDebug) {
       print("-----------$className-------------");
@@ -87,26 +91,26 @@ class JsonToModelCommand extends Command<String> {
     for (var element in jsonMap.entries) {
       print("${element.key}=${element.value}=${element.value.runtimeType}\n");
 
-      Reference fieldTypeRef = Reference("dynamic?");
+      CodeBuilder.Reference fieldTypeRef = CodeBuilder.Reference("dynamic?");
 
       if (element.value is int) {
-        fieldTypeRef = Reference("int?");
+        fieldTypeRef = CodeBuilder.Reference("int?");
       } else if (element.value is String) {
-        fieldTypeRef = Reference("String?");
+        fieldTypeRef = CodeBuilder.Reference("String?");
       } else if (element.value is double) {
-        fieldTypeRef = Reference("double?");
+        fieldTypeRef = CodeBuilder.Reference("double?");
       } else if (element.value is bool) {
-        fieldTypeRef = Reference("bool?");
+        fieldTypeRef = CodeBuilder.Reference("bool?");
       } else if (element.value is List) {
         List<String> genericityList = [];
         List<dynamic> list = (element.value as List);
-        getGenerateClassFromList(clzMap, genericityList, list, element.key.capitalize());
+        getGenerateClassFromList(clzList, genericityList, list, element.key.capitalize());
         String genericitys = getListGenericitys(genericityList);
-        fieldTypeRef = Reference("$genericitys?");
+        fieldTypeRef = CodeBuilder.Reference("$genericitys?");
       } else if (element.value is Map) {
         String childCallName = element.key.capitalize();
-        generateClassFromMap(clzMap, element.value, childCallName);
-        fieldTypeRef = Reference("${element.key.capitalize()}?");
+        generateClassFromMap(clzList, element.value, childCallName);
+        fieldTypeRef = CodeBuilder.Reference("${element.key.capitalize()}?");
       } else {
         print("Unprocessable type( ${element.key}=${json.runtimeType})");
       }
@@ -115,22 +119,52 @@ class JsonToModelCommand extends Command<String> {
         print("${element.key}=${element.value.runtimeType}");
       }
 
-      fieldList.add(Field((FieldBuilder fieldBuilder) {
+      fieldList.add(CodeBuilder.Field((CodeBuilder.FieldBuilder fieldBuilder) {
         fieldBuilder.name = element.key;
         fieldBuilder.type = fieldTypeRef;
       }));
     }
 
-    final clz = Class((classBuild) => classBuild
+    final clz = CodeBuilder.Class((classBuild) => classBuild
       ..name = className
-      ..fields.addAll(fieldList));
+      ..fields.addAll(fieldList)
+      ..methods.add(Method((MethodBuilder builder) {
+        builder.name = className;
+      }))
+      ..constructors.add(CodeBuilder.Constructor((CodeBuilder.ConstructorBuilder builder) {
+        builder.factory = true;
+        builder.name = "copy";
+        builder.requiredParameters.add(CodeBuilder.Parameter((CodeBuilder.ParameterBuilder builder) {
+          builder.name = "entity";
+          builder.type = CodeBuilder.Reference(className);
+        }));
+        builder.lambda = true;
+        builder.body = builder.body = CodeBuilder.Code('\$${className}Copy(entity)');
+      }))
+      ..constructors.add(CodeBuilder.Constructor((CodeBuilder.ConstructorBuilder builder) {
+        builder.factory = true;
+        builder.name = "fromJson";
+        builder.requiredParameters.add(CodeBuilder.Parameter((CodeBuilder.ParameterBuilder builder) {
+          builder.name = "jsonMap";
+          builder.type = CodeBuilder.Reference("Map<String, dynamic>");
+        }));
+        builder.lambda = true;
 
-    clzMap[clz.name] = clz;
+        builder.body = builder.body = CodeBuilder.Code('\$${className}FromJson(jsonMap)');
+      }))
+      ..methods.add(CodeBuilder.Method((CodeBuilder.MethodBuilder builder) {
+        builder.name = "toJson";
+        builder.body = CodeBuilder.Code('\$${className}ToJson(this)');
+        builder.returns = CodeBuilder.Reference("Map<String,dynamic>");
+        builder.lambda = true;
+      })));
+
+    clzList.add(clz);
 
     return className;
   }
 
-  void getGenerateClassFromList(LinkedHashMap<String, Class> clzMap, List<String> genericityList, List<dynamic> jsonList, String className) {
+  void getGenerateClassFromList(List<CodeBuilder.Class> clzList, List<String> genericityList, List<dynamic> jsonList, String className) {
     for (var element in jsonList) {
       print("$element=${element.runtimeType}\n");
 
@@ -142,10 +176,10 @@ class JsonToModelCommand extends Command<String> {
         genericityList.add("double");
       } else if (element is List) {
         genericityList.add("List");
-        getGenerateClassFromList(clzMap, genericityList, element, className);
+        getGenerateClassFromList(clzList, genericityList, element, className);
       } else if (element is Map) {
         String childCallName = className;
-        String type = generateClassFromMap(clzMap, element as Map<String, dynamic>, childCallName);
+        String type = generateClassFromMap(clzList, element as Map<String, dynamic>, childCallName);
         genericityList.add(type);
       } else if (element.value is bool) {
         genericityList.add("bool");
@@ -172,10 +206,7 @@ class JsonToModelCommand extends Command<String> {
   String _listGenericitys(String listGenericity, List<String> genericityList) {
     for (var element in genericityList.reversed) {
       listGenericity = "$element<$listGenericity>";
-
-      print(listGenericity);
     }
-
     return listGenericity;
   }
 }

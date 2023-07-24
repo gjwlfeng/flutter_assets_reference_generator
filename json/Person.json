@@ -1,24 +1,20 @@
 {
-	"body": {
-		"code": "0000",
-		"data": {
-			"msPropcircleworkList": [{
-				"articletitle": "测试数据一！",
-				"articletags": "冒险,极限"
-			},
-            {
-				"articletitle": "测试数据一",
-				"articletags": "旅游,美食"
-			},
-            {
-				"articletitle": "测试数据三",
-				"articletags": "文学,美食"
-			},
-            {
-				"articletitle": "测试数据四",
-				"articletags": "古玩,美食"
-			}]
-		},
-		"citys":[[ [[{"dd":"cc"}],[{"dd":"cc"}]],[[{"dd":"cc"}],[{"dd":"cc"}]],[[{"dd":"cc"}],[{"dd":"cc"}]]]]
-	}
+	"code": 24,
+	"data": {
+		"createdAt": 1637660675900,
+		"banTime": -1,
+		"banType": -1,
+		"isDevice": 0,
+		"id": 1463081034332336130,
+		"deviceId": "12f14082c33bf8ca5c8b654ba9effb26",
+		"userId": 107018573,
+		"banReason": "5545455",
+		"updatedAt": 1637660675900
+	},
+	"messages": [
+		"Your account has been disabled",
+		"Your account has been disabled",
+		"Your account has been disabled"
+	],
+	"timestamp": 1637725559747
 }

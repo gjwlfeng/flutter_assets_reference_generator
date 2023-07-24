@@ -1,26 +1,50 @@
-class MsPropcircleworkList {
-  String? articletitle;
+import 'json_convert_content.dart';
 
-  String? articletags;
-}
+part 'person.g.dart';
 
-class Data {
-  List<MsPropcircleworkList>? msPropcircleworkList;
-}
+class Person {
+  factory Person.copy(Person entity) => $PersonCopy(entity);
 
-class Citys {
-  String? dd;
-}
+  factory Person.fromJson(Map<String, dynamic> jsonMap) =>
+      $PersonFromJson(jsonMap);
 
-class Body {
-  String? code;
+  int? code;
 
   Data? data;
 
-  List<List<List<Citys>>>? citys;
+  List<String>? messages;
+
+  int? timestamp;
+
+  Person();
+  
+  Map<String, dynamic> toJson() => $PersonToJson(this);
 }
 
-class Person {
-  Body? body;
+class Data {
+  factory Data.copy(Data entity) => $DataCopy(entity);
+
+  factory Data.fromJson(Map<String, dynamic> jsonMap) => $DataFromJson(jsonMap);
+
+  int? createdAt;
+
+  int? banTime;
+
+  int? banType;
+
+  int? isDevice;
+
+  int? id;
+
+  String? deviceId;
+
+  int? userId;
+
+  String? banReason;
+
+  int? updatedAt;
+
+  Data();
+  Map<String, dynamic> toJson() => $DataToJson(this);
 }
 
