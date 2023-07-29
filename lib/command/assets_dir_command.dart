@@ -15,7 +15,7 @@ class AssetsDirCommand extends Command<String> {
   String get name => "assets_dir";
 
   @override
-  FutureOr<String>? run() async {
+  FutureOr<String>? run() {
     String currentDir = Directory.current.path;
 
     File file = File("$currentDir/pubspec.yaml");
@@ -91,6 +91,6 @@ class AssetsDirCommand extends Command<String> {
     File assetsFile = File('$currentDir/lib/generated/assets_dir.dart');
     assetsFile.parent.createSync(recursive: true);
     assetsFile.writeAsStringSync(assetsClassStr);
-    return Future.value("");
+    return null;
   }
 }

@@ -18,7 +18,7 @@ class AssetsCommand extends Command<String> {
   String get name => "assets";
 
   @override
-  FutureOr<String>? run() async {
+  FutureOr<String>? run() {
     String currentDir = Directory.current.path;
 
     File file = File("$currentDir/pubspec.yaml");
@@ -132,6 +132,6 @@ class AssetsCommand extends Command<String> {
     assetsFile.writeAsStringSync(assetsClassStr, mode: FileMode.append);
     assetsFile.writeAsStringSync("\n", mode: FileMode.append);
     assetsFile.writeAsStringSync(stringExtensionClassStr, mode: FileMode.append);
-    return Future.value("");
+    return null;
   }
 }

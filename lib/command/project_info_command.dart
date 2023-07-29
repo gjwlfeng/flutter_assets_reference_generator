@@ -35,7 +35,7 @@ class BuildConfigCommand extends Command<String> {
     String pubspecYamlContent = file.readAsStringSync();
     Pubspec pubspec = Pubspec.parse(pubspecYamlContent);
 
-    final buildConfig = Class(
+    final projectInfoClass = Class(
       (classBuild) => classBuild
         ..name = "ProjectInfo"
         ..docs = ListBuilder(["///Code generation, please do not manually modify", "///project info Reference Class"])
@@ -60,15 +60,25 @@ class BuildConfigCommand extends Command<String> {
               ..assignment = Code("\"${pubspec.version}\"")
               ..docs = ListBuilder<String>(["///versionName"]),
           ),
+        )
+        ..fields.add(
+          Field(
+            (fieldBuild) => fieldBuild
+              ..static = true
+              ..name = "description"
+              ..type = refer("String")
+              ..modifier = FieldModifier.constant
+              ..assignment = Code("\"${pubspec.description}\"")
+              ..docs = ListBuilder<String>(["///description"]),
+          ),
         ),
     );
 
     final emitter = DartEmitter();
-    String buildConfigClassStr = DartFormatter().format('${buildConfig.accept(emitter)}');
-
-    File buildConfigFile = File('$currentDir/lib/generated/project_info.dart');
-    buildConfigFile.parent.createSync(recursive: true);
-    buildConfigFile.writeAsStringSync(buildConfigClassStr);
+    String buildConfigClassStr = DartFormatter().format('${projectInfoClass.accept(emitter)}');
+    File projectInfoClassFile = File('$currentDir/lib/generated/project_info.dart');
+    projectInfoClassFile.parent.createSync(recursive: true);
+    projectInfoClassFile.writeAsStringSync(buildConfigClassStr);
     return null;
   }
 }
