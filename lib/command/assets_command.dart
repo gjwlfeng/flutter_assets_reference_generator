@@ -75,19 +75,26 @@ class AssetsCommand extends Command<String> {
       }
 
       assetsKeyList.add(assetsKey);
-      docsList.add("///$shortPath");
 
+      docsList.add("///[$shortPath](${file.uri})");
+      docsList.add("///```");
       try {
-        var fileList = await file.readAsBytes();
+        var fileList = file.readAsBytesSync();
         var decoder = ddImage.decodeImage(Uint8List.fromList(fileList));
         bool isValid = decoder?.isValid ?? false;
         if (isValid) {
-          docsList.add("///size:${decoder!.width}x${decoder.height}");
+          docsList.add("///json");
+          docsList.add("///\"@4\":{withd:${decoder!.width / 4},height:${decoder.height / 4}}");
+          docsList.add("///\"@3\":{withd:${decoder.width / 3},height:${decoder.height / 3}}");
+          docsList.add("///\"@2\":{withd:${decoder.width / 2},height:${decoder.height / 2}}");
+          docsList.add("///\"@1\":{withd:${decoder.width / 1},height:${decoder.height / 1}}");
+          docsList.add("///json");
         }
       } catch (e) {
         stderr.writeln("$e");
         stderr.writeln("Failed to obtain image size! ${file.path}");
       }
+      docsList.add("///```");
 
       fieldList.add(Field((fieldBuild) => fieldBuild
         ..static = true

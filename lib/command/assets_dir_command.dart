@@ -33,7 +33,7 @@ class AssetsDirCommand extends Command<String> {
     String pubspecYamlContent = file.readAsStringSync();
     Pubspec pubspec = Pubspec.parse(pubspecYamlContent);
 
-    List<String> dirList = [];
+    Map<String, Directory> dirMap = {};
     if (pubspec.flutter != null) {
       YamlList fontsYamlList = pubspec.flutter!["assets"] ?? YamlList();
       for (String item in fontsYamlList) {
@@ -41,15 +41,15 @@ class AssetsDirCommand extends Command<String> {
         bool isFile = FileSystemEntity.isFileSync(path);
         if (isFile) {
           String parentPath = File(path).parent.path;
-          if (!dirList.contains(parentPath)) {
-            dirList.add(parentPath);
+          if (dirMap[parentPath] == null) {
+            dirMap[parentPath] = File(path).parent;
           }
         } else {
           bool isDir = FileSystemEntity.isDirectorySync(path);
           if (isDir) {
             Directory directory = Directory(path);
-            if (!dirList.contains(directory.path)) {
-              dirList.add(directory.path);
+            if (dirMap[directory.path] == null) {
+              dirMap[directory.path] = directory;
             }
           } else {
             print("Unable to identify whether the path is a file or a directory！$path");
@@ -60,15 +60,15 @@ class AssetsDirCommand extends Command<String> {
 
     List<String> assetsKeyList = [];
     List<Field> fieldList = [];
-    for (String dirPath in dirList) {
+    for (MapEntry<String, Directory> dirEntry in dirMap.entries) {
       var docsList = List.empty(growable: true);
 
-      String shortPath = dirPath.replaceAll("$currentDir/", "");
+      String shortPath = dirEntry.key.replaceAll("$currentDir/", "");
 
       String assetsDirWithDividerKey = shortPath.replaceAll(RegExp(r'\s'), "_").replaceAll("/", "_").replaceAll(".", "_");
       String assetsDirKey = assetsDirWithDividerKey.replaceFirst(RegExp(r'_'), "", assetsDirWithDividerKey.length - 1);
 
-      docsList.add("///dir:$shortPath");
+      docsList.add("///[$shortPath](${dirEntry.value.uri})");
 
       fieldList.add(Field((fieldBuild) => fieldBuild
         ..static = true
