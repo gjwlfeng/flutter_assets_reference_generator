@@ -99,7 +99,7 @@ class AssetsCommand extends Command<String> {
     }
 
     final assets = Class((classBuild) => classBuild //生成一个类
-      ..name = "Assets" //这个类的名字叫User
+      ..name = "Assets" //这个类的名字叫Assets
       ..docs = ListBuilder(["///Code generation, please do not manually modify", "///Assets Reference Class"])
       ..fields.addAll(fieldList));
 
