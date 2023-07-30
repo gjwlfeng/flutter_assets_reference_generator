@@ -1,12 +1,9 @@
-import 'json_convert_content.dart';
-
-part 'person.g.dart';
+import 'person_clone.dart';
 
 class Person {
   factory Person.copy(Person entity) => $PersonCopy(entity);
 
-  factory Person.fromJson(Map<String, dynamic> jsonMap) =>
-      $PersonFromJson(jsonMap);
+  factory Person.fromJson(Map<String, dynamic> jsonMap) => $PersonFromJson(jsonMap);
 
   int? code;
 
@@ -17,7 +14,6 @@ class Person {
   int? timestamp;
 
   Person();
-  
   Map<String, dynamic> toJson() => $PersonToJson(this);
 }
 
@@ -45,6 +41,5 @@ class Data {
   int? updatedAt;
 
   Data();
-  Map<String, dynamic> toJson() => $DataToJson(this);
+  void dd() {}
 }
-

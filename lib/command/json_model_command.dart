@@ -9,16 +9,16 @@ import 'package:flutter_assets_generate/extension.dart';
 import 'package:path/path.dart';
 import 'package:args/command_runner.dart';
 
-class JsonToModelCommand extends Command<String> {
+class JsonModelCommand extends Command<String> {
   @override
   String get description => "Generate model classes based on JSON.";
 
   @override
-  String get name => "jsonToModel";
+  String get name => "json_model";
 
   bool isDebug = false;
 
-  JsonToModelCommand() {
+  JsonModelCommand() {
     argParser.addOption('file', abbr: 'f');
     argParser.addFlag("debug", defaultsTo: false);
   }

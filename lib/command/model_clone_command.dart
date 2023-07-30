@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'package:analyzer/dart/analysis/features.dart';
 import 'package:analyzer/dart/analysis/utilities.dart';
@@ -9,18 +10,19 @@ import 'package:code_builder/code_builder.dart' as CodeBuilder;
 import 'package:dart_style/dart_style.dart';
 import 'package:flutter_assets_generate/extension.dart';
 import 'package:path/path.dart';
+import 'package:built_collection/built_collection.dart';
 import 'package:args/command_runner.dart';
 
-class ModelCommand extends Command<String> {
+class ModelCloneCommand extends Command<String> {
   @override
   String get description => "Processing method for generating JSON.";
 
   @override
-  String get name => "model";
+  String get name => "model_clone";
 
   bool isDebug = false;
 
-  ModelCommand() {
+  ModelCloneCommand() {
     argParser.addOption('file', abbr: 'f');
     argParser.addFlag("debug", defaultsTo: false);
   }
@@ -34,32 +36,34 @@ class ModelCommand extends Command<String> {
       return null;
     }
     isDebug = argResults!["debug"];
-    String jsonFilePath = argResults!["file"];
+    String modelFilePath = argResults!["file"];
 
-    File jsonfile = File(jsonFilePath);
+    File modelfile = File(modelFilePath);
 
-    String fileName = basenameWithoutExtension(jsonfile.path);
+    String fileName = basenameWithoutExtension(modelfile.path);
 
     if (isDebug) {
-      print(jsonfile.absolute.path);
+      print(modelfile.absolute.path);
     }
 
-    if (!jsonfile.existsSync()) {
-      print("File not found (${jsonfile.path});");
+    if (!modelfile.existsSync()) {
+      print("File not found (${modelfile.path});");
       return null;
     }
 
     try {
-      var parseResult = parseFile(path: jsonfile.path, featureSet: FeatureSet.latestLanguageVersion());
+      var parseResult = parseFile(path: modelfile.path, featureSet: FeatureSet.latestLanguageVersion());
       var compilationUnit = parseResult.unit;
       //遍历AST
 
       Map<String, dynamic>? map = compilationUnit.accept<Map<String, dynamic>>(ModelSimpleAstVisitor());
 
-      List<Method> methods = [];
+      List<Extension> extensionList = [];
 
       if (map != null) {
-        printMap(map);
+        if (isDebug) {
+          print(jsonEncode(map));
+        }
 
         List? classList = map["class"];
 
@@ -67,13 +71,11 @@ class ModelCommand extends Command<String> {
           String className = element["name"];
           List? fieldList = element["fields"];
 
-          List<Code> copyCodeList = [];
-          List<Code> toJsonCodeList = [];
-          List<Code> fromJsonCodeList = [];
+          List<Code> cloneCodeList = [];
 
-          copyCodeList.add(Code("$className ${className.initialLowercase()}=$className();"));
-          toJsonCodeList.add(Code("final Map<String, dynamic> data = <String, dynamic>{};"));
-          fromJsonCodeList.add(Code("$className ${className.initialLowercase()}=$className();"));
+          String newModelName = "entity";
+
+          cloneCodeList.add(Code("$className $newModelName=$className();"));
 
           fieldList?.forEach((field) {
             List? items = field["items"];
@@ -100,84 +102,91 @@ class ModelCommand extends Command<String> {
             items?.forEach((item) {
               String name = item["name"];
               String type = item["type"];
-              //print(name);
 
-              copyCodeList.add(Code("${className.initialLowercase()}.$name=entity.$name;"));
+              //  entity.messages= person.messages?.map<String>((item) => item.clone()).toList();
+              //   entity.tag= person.tag?.map((key, value) =>
+              //       MapEntry(key.clone(),value.clone())
+              //   );
 
-              if (serialize.toLowerCase() == 'true') {
-                toJsonCodeList.add(Code("data[${annaKey ?? ("\"$name\"")}]=entity.$name;"));
-              }
-
-              if (deserialize.toLowerCase() == 'true') {
-                fromJsonCodeList.add(Code("$type $name=jsonConvert.convert<${type.replaceAll("?", "")}>(jsonMap[${annaKey ?? ("\"$name\"")}]);"));
-                fromJsonCodeList.add(Code("if($name !=null ){ ${className.initialLowercase()}.$name=$name; }"));
+              if (type.startsWith("List<")) {
+                int startIndex = type.indexOf("<");
+                int endIndex = type.indexOf(">");
+                String genericity = type.substring(startIndex + 1, endIndex);
+                cloneCodeList.add(Code("$newModelName.$name=${className.initialLowercase()}.$name?.map<$genericity>((item)=> item.clone()).toList();"));
+              } else if (type.startsWith("Map<")) {
+                int startIndex = type.indexOf("<");
+                int endIndex = type.indexOf(">");
+                String genericity = type.substring(startIndex + 1, endIndex);
+                cloneCodeList.add(Code("$newModelName.$name=${className.initialLowercase()}.$name?.map((key, value)=> MapEntry(key.clone(),value.clone()));"));
+              } else {
+                cloneCodeList.add(Code("$newModelName.$name=${className.initialLowercase()}.$name.clone();"));
               }
             });
           });
-          copyCodeList.add(Code("return ${className.initialLowercase()};"));
-          toJsonCodeList.add(Code("return data;"));
-          fromJsonCodeList.add(Code("return ${className.initialLowercase()};"));
+          cloneCodeList.add(Code("return $newModelName;"));
 
-          Method copyMethod = Method((MethodBuilder builder) {
-            builder.name = "\$${className}Copy";
+          Method cloneMethod = Method((MethodBuilder builder) {
+            builder.name = "clone";
             builder.requiredParameters.add(Parameter((ParameterBuilder builder) {
-              builder.name = "entity";
+              builder.name = className.initialLowercase();
               builder.type = Reference(className);
             }));
-            builder.body = CodeBuilder.Block.of(copyCodeList);
+            builder.body = CodeBuilder.Block.of(cloneCodeList);
             builder.returns = Reference(className);
           });
 
-          Method toJsonMethod = Method((MethodBuilder builder) {
-            builder.name = "\$${className}ToJson";
-            builder.requiredParameters.add(Parameter((ParameterBuilder builder) {
-              builder.name = "entity";
-              builder.type = Reference(className);
-            }));
-            builder.body = CodeBuilder.Block.of(toJsonCodeList);
-            builder.returns = Reference("Map<String, dynamic>");
-          });
-
-          Method fromJsonMethod = Method((MethodBuilder builder) {
-            builder.name = "\$${className}FromJson";
-            builder.requiredParameters.add(Parameter((ParameterBuilder builder) {
-              builder.name = "jsonMap";
-              builder.type = Reference("Map<String, dynamic>");
-            }));
-            builder.body = CodeBuilder.Block.of(fromJsonCodeList);
-            builder.returns = Reference(className);
-          });
-
-          methods.add(copyMethod);
-          methods.add(toJsonMethod);
-          methods.add(fromJsonMethod);
+          final extension = Extension((extensionBuilder) => extensionBuilder
+            ..name = "${className}CloneExtension"
+            ..on = refer(className)
+            ..docs = ListBuilder(["///$className clone extension"])
+            ..methods = ListBuilder([cloneMethod]));
+          extensionList.add(extension);
         });
       }
 
       final emitter = DartEmitter();
 
-      File dartGFile = File(join(jsonfile.parent.path, "$fileName.g.dart"));
+      File dartFile = File(join(modelfile.parent.path, "${fileName}_clone.dart"));
 
-      if (!dartGFile.parent.existsSync()) {
-        dartGFile.parent.createSync(recursive: true);
+      if (!dartFile.parent.existsSync()) {
+        dartFile.parent.createSync(recursive: true);
       }
 
-      CodeBuilder.Directive partDirective = CodeBuilder.Directive.partOf("$fileName.dart");
-      String partDirectiveStr = DartFormatter().format('${partDirective.accept(emitter)}');
+      DartFormatter dartFormatter = DartFormatter();
 
-      dartGFile.writeAsStringSync(partDirectiveStr, mode: FileMode.write);
-      dartGFile.writeAsStringSync("\n", mode: FileMode.append);
+      CodeBuilder.Directive pathDirective = CodeBuilder.Directive.import("$fileName.dart");
+      CodeBuilder.Directive objectCloneDirective = CodeBuilder.Directive.import("package:object_clone_extension/object_clone_extension.dart");
 
-      for (var element in methods) {
-        String methodStr = DartFormatter().format('${element.accept(emitter)}');
-        dartGFile.writeAsStringSync(methodStr, mode: FileMode.append);
-        dartGFile.writeAsStringSync("\n", mode: FileMode.append);
+      String pathDirectiveStr = dartFormatter.format('${pathDirective.accept(emitter)}');
+      String objectCloneDirectiveStr = dartFormatter.format('${objectCloneDirective.accept(emitter)}');
+
+      if (isDebug) {
+        print(pathDirective.toString());
+        print(objectCloneDirective.toString());
+      }
+
+      dartFile.writeAsStringSync(pathDirectiveStr);
+      dartFile.writeAsStringSync(objectCloneDirectiveStr, mode: FileMode.append);
+      dartFile.writeAsStringSync("\n", mode: FileMode.append);
+      for (var extension in extensionList) {
+        if (isDebug) {
+          print(extension.toString());
+        }
+        String extensionStr = dartFormatter.format('${extension.accept(emitter)}');
+        dartFile.writeAsStringSync(extensionStr, mode: FileMode.append);
+        dartFile.writeAsStringSync("\n", mode: FileMode.append);
       }
     } catch (e) {
       print('Parse file error: ${e.toString()}');
     }
 
     return null;
+  }
+
+  void codeBlack(List<Code> cloneCodeList, Function(List<Code> cloneCodeList) callback, {String? condition}) {
+    cloneCodeList.add(Code(condition != null ? "$condition{" : "{"));
+    callback(cloneCodeList);
+    cloneCodeList.add(Code("}"));
   }
 
   void printMap(Map<String, dynamic> map) {
