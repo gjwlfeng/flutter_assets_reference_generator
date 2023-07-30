@@ -80,8 +80,8 @@ class AssetsCommand extends Command<String> {
       docsList.add("///[$shortPath](${file.uri})");
 
       try {
-        var fileList = file.readAsBytesSync();
-        var decoder = ddImage.decodeImage(Uint8List.fromList(fileList));
+        var imageFile = file.readAsBytesSync();
+        var decoder = ddImage.decodeImage(Uint8List.fromList(imageFile));
         bool isValid = decoder?.isValid ?? false;
         if (isValid) {
           docsList2.add("///```json");
