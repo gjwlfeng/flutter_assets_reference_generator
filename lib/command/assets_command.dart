@@ -64,8 +64,6 @@ class AssetsCommand extends Command<String> {
     List<String> assetsKeyList = [];
     List<Field> fieldList = [];
     for (File file in fileList) {
-      var docsList = List.empty(growable: true);
-
       String extension = path.extension(file.path);
       String shortPath = file.path.replaceAll("$currentDir/", "");
       String assetsKey = shortPath.replaceAll(extension, "");
@@ -76,25 +74,32 @@ class AssetsCommand extends Command<String> {
 
       assetsKeyList.add(assetsKey);
 
+      var docsList = List.empty(growable: true);
+      var docsList2 = List.empty(growable: true);
+
       docsList.add("///[$shortPath](${file.uri})");
-      docsList.add("///```");
+
       try {
         var fileList = file.readAsBytesSync();
         var decoder = ddImage.decodeImage(Uint8List.fromList(fileList));
         bool isValid = decoder?.isValid ?? false;
         if (isValid) {
-          docsList.add("///json");
-          docsList.add("///\"@4\":{withd:${decoder!.width / 4},height:${decoder.height / 4}}");
-          docsList.add("///\"@3\":{withd:${decoder.width / 3},height:${decoder.height / 3}}");
-          docsList.add("///\"@2\":{withd:${decoder.width / 2},height:${decoder.height / 2}}");
-          docsList.add("///\"@1\":{withd:${decoder.width / 1},height:${decoder.height / 1}}");
-          docsList.add("///json");
+          docsList2.add("///```json");
+          docsList2.add("///{");
+          docsList2.add("///  \"x4\":{\"withd\":${decoder!.width / 4},\"height\":${decoder.height / 4},},");
+          docsList2.add("///  \"x3\":{\"withd\":${decoder.width / 3},\"height\":${decoder.height / 3},},");
+          docsList2.add("///  \"x2\":{\"withd\":${decoder.width / 2},\"height\":${decoder.height / 2},},");
+          docsList2.add("///  \"x1\":{\"withd\":${decoder.width / 1},\"height\":${decoder.height / 1},},");
+          docsList2.add("///}");
+          docsList2.add("///```");
         }
       } catch (e) {
         stderr.writeln("$e");
         stderr.writeln("Failed to obtain image size! ${file.path}");
       }
-      docsList.add("///```");
+      if (docsList2.isNotEmpty) {
+        docsList.addAll(docsList2);
+      }
 
       fieldList.add(Field((fieldBuild) => fieldBuild
         ..static = true
