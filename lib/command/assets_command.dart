@@ -11,6 +11,9 @@ import 'package:yaml/yaml.dart';
 import 'package:path/path.dart' as path;
 
 class AssetsCommand extends Command<String> {
+  static const _assets_images = "assets/images/";
+  static const _assets_audio = "assets/audio/";
+
   @override
   String get description => "Generate the Assets class.";
 
@@ -101,13 +104,39 @@ class AssetsCommand extends Command<String> {
         docsList.addAll(docsList2);
       }
 
+      String fieldName = assetsKey.replaceAll(RegExp(r'\s'), "_").replaceAll("/", "_").replaceAll(".", "_");
+
       fieldList.add(Field((fieldBuild) => fieldBuild
         ..static = true
-        ..name = assetsKey.replaceAll(RegExp(r'\s'), "_").replaceAll("/", "_").replaceAll(".", "_")
+        ..name = fieldName
         ..type = refer("String")
         ..modifier = FieldModifier.constant
         ..assignment = Code("\"$shortPath\"")
         ..docs = ListBuilder(docsList)));
+
+      if (shortPath.startsWith(_assets_audio)) {
+        String fieldName2 = assetsKey.replaceAll(_assets_audio, "").replaceAll(RegExp(r'\s'), "_").replaceAll("/", "_").replaceAll(".", "_");
+        String filedValue2 = shortPath.replaceAll(_assets_audio, "");
+
+        fieldList.add(Field((fieldBuild) => fieldBuild
+          ..static = true
+          ..name = fieldName2
+          ..type = refer("String")
+          ..modifier = FieldModifier.constant
+          ..assignment = Code("\"$filedValue2\"")
+          ..docs = ListBuilder(docsList)));
+      } else if (shortPath.startsWith(_assets_images)) {
+        String fieldName2 = assetsKey.replaceAll(_assets_images, "").replaceAll(RegExp(r'\s'), "_").replaceAll("/", "_").replaceAll(".", "_");
+        String filedValue2 = shortPath.replaceAll(_assets_images, "");
+
+        fieldList.add(Field((fieldBuild) => fieldBuild
+          ..static = true
+          ..name = fieldName2
+          ..type = refer("String")
+          ..modifier = FieldModifier.constant
+          ..assignment = Code("\"$filedValue2\"")
+          ..docs = ListBuilder(docsList)));
+      }
     }
 
     final assets = Class((classBuild) => classBuild //生成一个类
