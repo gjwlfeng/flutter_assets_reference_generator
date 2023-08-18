@@ -22,9 +22,9 @@ dependencies:
   args: ^2.4.2
   analyzer: ^5.13.0
   object_clone_extension:
-    path: /Users/zengfeng/Documents/WorkSpace/Flutter/object_clone_extension
+    path: D:/workspace/Flutter/object_clone_extension
   object_json_extension:
-    path: /Users/zengfeng/Documents/WorkSpace/Flutter/object_json_extension
+    path: D:/workspace/Flutter/object_json_extension
 
 executables:
   fag: flutter_assets_generator

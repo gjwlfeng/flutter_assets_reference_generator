@@ -84,12 +84,12 @@ class AssetsCommand extends Command<String> {
         var decoder = ddImage.decodeImage(Uint8List.fromList(imageFile));
         bool isValid = decoder?.isValid ?? false;
         if (isValid) {
-          docsList2.add("///```json");
+          docsList2.add("///```");
           docsList2.add("///{");
-          docsList2.add("///  \"x4\":{\"withd\":${decoder!.width / 4},\"height\":${decoder.height / 4},},");
-          docsList2.add("///  \"x3\":{\"withd\":${decoder.width / 3},\"height\":${decoder.height / 3},},");
-          docsList2.add("///  \"x2\":{\"withd\":${decoder.width / 2},\"height\":${decoder.height / 2},},");
-          docsList2.add("///  \"x1\":{\"withd\":${decoder.width / 1},\"height\":${decoder.height / 1},},");
+          docsList2.add("///  \"x4\":{width:${decoder!.width / 4},height:${decoder.height / 4},},");
+          docsList2.add("///  \"x3\":{width:${decoder.width / 3},height:${decoder.height / 3},},");
+          docsList2.add("///  \"x2\":{width:${decoder.width / 2},height:${decoder.height / 2},},");
+          docsList2.add("///  \"x1\":{width:${decoder.width / 1},height:${decoder.height / 1},}");
           docsList2.add("///}");
           docsList2.add("///```");
         }
@@ -103,7 +103,7 @@ class AssetsCommand extends Command<String> {
 
       fieldList.add(Field((fieldBuild) => fieldBuild
         ..static = true
-        ..name = assetsKey.replaceAll(RegExp(r'\s'), "_").replaceAll("/", "_").replaceAll(".", "_")
+        ..name = assetsKey.replaceAll(RegExp(r'\s'), "_").replaceAll("/", "_").replaceAll(".", "_").replaceAll("-", "_")
         ..type = refer("String")
         ..modifier = FieldModifier.constant
         ..assignment = Code("\"$shortPath\"")
