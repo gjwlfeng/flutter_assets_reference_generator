@@ -260,14 +260,14 @@ packages:
   object_clone_extension:
     dependency: "direct main"
     description:
-      path: "D:/workspace/Flutter/object_clone_extension"
+      path: "/Users/zengfeng/Documents/WorkSpace/Flutter/object_clone_extension"
       relative: false
     source: path
     version: "1.0.0"
   object_json_extension:
     dependency: "direct main"
     description:
-      path: "D:/workspace/Flutter/object_json_extension"
+      path: "/Users/zengfeng/Documents/WorkSpace/Flutter/object_json_extension"
       relative: false
     source: path
     version: "1.0.0"
