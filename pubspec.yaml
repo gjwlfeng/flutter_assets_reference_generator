@@ -1,6 +1,6 @@
 name: flutter_assets_reference_generator
 description: Flutter resource reference generation tool.
-version: 1.0.1
+version: 1.0.2
 repository: https://github.com/gjwlfeng/flutter_assets_reference_generator
 
 environment:
