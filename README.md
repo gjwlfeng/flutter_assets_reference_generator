@@ -1,4 +1,17 @@
-Flutter resource reference generation tool.
+# Flutter Resource Reference Class Generation Tool!
 
-#command:
-dart pub global activate -s path ./
+## install command:
+
+dart pub global activate flutter_assets_reference_generator
+
+## Usage: fag <command> [arguments]
+
+Global options:
+-h, --help    Print this usage information.
+
+* Available commands:
+- assets        Generate the Assets class.
+- assets_dir    Generate the Assets dir class.
+- fonts         Generate the Fonts class.
+- projectInfo   Generate the ProjectInfo class.
+

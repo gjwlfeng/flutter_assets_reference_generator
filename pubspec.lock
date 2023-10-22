@@ -58,7 +58,7 @@ packages:
     source: hosted
     version: "1.1.1"
   built_collection:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: built_collection
       sha256: "376e3dd27b51ea877c28d525560790aee2e6fbb5f20e2f85d5081027d94e2100"
@@ -257,20 +257,6 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "2.0.2"
-  object_clone_extension:
-    dependency: "direct main"
-    description:
-      path: "/Users/zengfeng/Documents/WorkSpace/Flutter/object_clone_extension"
-      relative: false
-    source: path
-    version: "1.0.0"
-  object_json_extension:
-    dependency: "direct main"
-    description:
-      path: "/Users/zengfeng/Documents/WorkSpace/Flutter/object_json_extension"
-      relative: false
-    source: path
-    version: "1.0.0"
   package_config:
     dependency: transitive
     description:
@@ -280,7 +266,7 @@ packages:
     source: hosted
     version: "2.1.0"
   path:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: path
       sha256: "8829d8a55c13fc0e37127c29fedf290c102f4e40ae94ada574091fe0ff96c917"
@@ -488,7 +474,7 @@ packages:
     source: hosted
     version: "6.3.0"
   yaml:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: yaml
       sha256: "75769501ea3489fca56601ff33454fe45507ea3bfb014161abc3b43ae25989d5"

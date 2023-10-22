@@ -3,7 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:built_collection/built_collection.dart';
 import 'package:args/command_runner.dart';
-import 'package:image/image.dart' as ddImage;
+import 'package:image/image.dart' as dd_image;
 import 'package:code_builder/code_builder.dart';
 import 'package:dart_style/dart_style.dart';
 import 'package:pubspec_parse/pubspec_parse.dart';
@@ -13,8 +13,8 @@ import 'package:path/path.dart' as path;
 class AssetsCommand extends Command<String> {
   static const _assets = "assets/";
 
-  static const _assets_images = "${_assets}images/";
-  static const _assets_audio = "${_assets}audio/";
+  static const _assetsImages = "${_assets}images/";
+  static const _assetsAudio = "${_assets}audio/";
 
   @override
   String get description => "Generate the Assets class.";
@@ -86,7 +86,7 @@ class AssetsCommand extends Command<String> {
 
       try {
         var imageFile = file.readAsBytesSync();
-        var decoder = ddImage.decodeImage(Uint8List.fromList(imageFile));
+        var decoder = dd_image.decodeImage(Uint8List.fromList(imageFile));
         bool isValid = decoder?.isValid ?? false;
         if (isValid) {
           docsList2.add("///```");
@@ -116,9 +116,9 @@ class AssetsCommand extends Command<String> {
         ..assignment = Code("\"$shortPath\"")
         ..docs = ListBuilder(docsList)));
 
-      if (shortPath.startsWith(_assets_audio)) {
+      if (shortPath.startsWith(_assetsAudio)) {
         String fieldName2 = assetsKey.replaceAll(_assets, "").replaceAll(RegExp(r'\s'), "_").replaceAll("/", "_").replaceAll(".", "_");
-        String filedValue2 = shortPath.replaceAll(_assets_audio, "");
+        String filedValue2 = shortPath.replaceAll(_assetsAudio, "");
 
         fieldList.add(Field((fieldBuild) => fieldBuild
           ..static = true
@@ -127,9 +127,9 @@ class AssetsCommand extends Command<String> {
           ..modifier = FieldModifier.constant
           ..assignment = Code("\"$filedValue2\"")
           ..docs = ListBuilder(docsList)));
-      } else if (shortPath.startsWith(_assets_images)) {
+      } else if (shortPath.startsWith(_assetsImages)) {
         String fieldName2 = assetsKey.replaceAll(_assets, "").replaceAll(RegExp(r'\s'), "_").replaceAll("/", "_").replaceAll(".", "_");
-        String filedValue2 = shortPath.replaceAll(_assets_images, "");
+        String filedValue2 = shortPath.replaceAll(_assetsImages, "");
 
         fieldList.add(Field((fieldBuild) => fieldBuild
           ..static = true

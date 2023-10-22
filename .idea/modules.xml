@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/flutter_assets_generate.iml" filepath="$PROJECT_DIR$/flutter_assets_generate.iml" />
+      <module fileurl="file://$PROJECT_DIR$/flutter_assets_reference_generator.iml" filepath="$PROJECT_DIR$/flutter_assets_reference_generator.iml" />
     </modules>
   </component>
 </project>

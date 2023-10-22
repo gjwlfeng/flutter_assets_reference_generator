@@ -9,8 +9,8 @@ import 'package:yaml/yaml.dart';
 
 class AssetsDirCommand extends Command<String> {
   static const _assets = "assets/";
-  static const _assets_images = "${_assets}images/";
-  static const _assets_audio = "${_assets}audio/";
+  static const _assetsImages = "${_assets}images/";
+  static const _assetsAudio = "${_assets}audio/";
 
   @override
   String get description => "Generate the Assets dir class.";
@@ -62,7 +62,7 @@ class AssetsDirCommand extends Command<String> {
       }
     }
 
-    List<String> assetsKeyList = [];
+    // List<String> assetsKeyList = [];
     List<Field> fieldList = [];
     for (MapEntry<String, Directory> dirEntry in dirMap.entries) {
       var docsList = List.empty(growable: true);
@@ -82,10 +82,10 @@ class AssetsDirCommand extends Command<String> {
         ..assignment = Code("\"$shortPath\"")
         ..docs = ListBuilder(docsList)));
 
-      if (shortPath.startsWith(_assets_audio)) {
+      if (shortPath.startsWith(_assetsAudio)) {
         String fieldName2 = shortPath.replaceAll(_assets, "").replaceAll(RegExp(r'\s'), "_").replaceAll("/", "_").replaceAll(".", "_");
         //.replaceFirst(RegExp(r'_'), "", assetsDirWithDividerKey.length - 1);
-        String filedValue2 = shortPath.replaceAll(_assets_audio, "");
+        String filedValue2 = shortPath.replaceAll(_assetsAudio, "");
 
         if (fieldName2.endsWith("_")) {
           fieldName2 = fieldName2.substring(0, fieldName2.length - 1);
@@ -100,10 +100,10 @@ class AssetsDirCommand extends Command<String> {
             ..assignment = Code("\"$filedValue2\"")
             ..docs = ListBuilder(docsList)));
         }
-      } else if (shortPath.startsWith(_assets_images)) {
+      } else if (shortPath.startsWith(_assetsImages)) {
         String fieldName2 = shortPath.replaceAll(_assets, "").replaceAll(RegExp(r'\s'), "_").replaceAll("/", "_").replaceAll(".", "_");
         //.replaceFirst(RegExp(r'_'), "", assetsDirWithDividerKey.length - 1);
-        String filedValue2 = shortPath.replaceAll(_assets_images, "");
+        String filedValue2 = shortPath.replaceAll(_assetsImages, "");
 
         if (fieldName2.endsWith("_")) {
           fieldName2 = fieldName2.substring(0, fieldName2.length - 1);
