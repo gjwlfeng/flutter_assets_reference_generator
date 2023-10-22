@@ -9,7 +9,7 @@ import 'package:flutter_assets_generate/command/fonts_command.dart';
 import 'package:flutter_assets_generate/command/assets_command.dart';
 
 Future<void> main(List<String> arguments) async {
-  final runner = CommandRunner<String>('fag', 'Flutter resource reference generation tool!')
+  final runner = CommandRunner<String>('fag', 'Flutter Resource Reference Class Generation Tool!')
     ..addCommand(AssetsCommand())
     ..addCommand(AssetsDirCommand())
     ..addCommand(FontsCommand())
