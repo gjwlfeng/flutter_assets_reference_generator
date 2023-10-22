@@ -21,13 +21,14 @@ class FontsCommand extends Command<String> {
     File file = File("$currentDir/pubspec.yaml");
     bool isFileExists = file.existsSync();
     if (!isFileExists) {
-      throw PathNotFoundException(file.path, OSError("Unable to find pubspec.yaml file!", 1));
+      stderr.writeln("Unable to find pubspec.yaml file!");
+      return null;
     }
 
     Directory directory = Directory("$currentDir/lib");
     bool isLibDirExists = directory.existsSync();
     if (!isLibDirExists) {
-      throw PathNotFoundException(directory.path, OSError("Unable to find lib folder!", 2));
+      directory.createSync(recursive: true);
     }
 
     String pubspecYamlContent = file.readAsStringSync();
